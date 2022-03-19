@@ -1,4 +1,4 @@
-schema: https://graphql-pokemon2.vercel.app
+schema: ${REACT_APP_API_URI}
 documents: src/**/!(*.d).{ts,tsx}
 generates:
   ./src/__generated__/graphql-types.ts: 
