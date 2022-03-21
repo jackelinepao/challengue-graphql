@@ -1,10 +1,10 @@
-import { useMutation, useQuery } from '@apollo/client';
 import React from 'react'
+
+import { useMutation, useQuery } from '@apollo/client';
 import { ALL_TASKS_QUERY } from '../../graphQl/queries/getTastks';
 import 'antd/dist/antd.css';
 import { Table, Tag, Space, Typography, Button } from 'antd';
 import { PointEstimate, User } from '../../__generated__/graphql-types';
-import { AssignmentOperator } from 'typescript';
 import Avatar from 'antd/lib/avatar/avatar';
 import Text from 'antd/lib/typography/Text';
 import { DELETE_TASK_QUERY } from '../../graphQl/mutations/deleteTasks';
@@ -14,21 +14,22 @@ interface IProps {
 }
 
 export default function ListTasks({ progress }: IProps) {
-  const { data, loading, error } = useQuery(ALL_TASKS_QUERY, { variables: { input: {} } })
-  const [deleteTask] = useMutation(DELETE_TASK_QUERY, {refetchQueries: [ {query: ALL_TASKS_QUERY, variables: { input: {} }}]});
-  console.log(data);
+  const { data, loading, error } = useQuery(ALL_TASKS_QUERY, { variables: { input: { status: progress } } })
+  const [deleteTask] = useMutation(DELETE_TASK_QUERY, { refetchQueries: [{ query: ALL_TASKS_QUERY, variables: { input: {} } }] });
+
   if (loading) {
     return <div className="Loading">Loading</div>
   }
   if (error) {
     return null //Error
   }
+
   const columns = [
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string) => <a>{name}</a>,
+      render: (name: string) => <Text>{name}</Text>,
     },
     {
       title: 'Task Tags',
@@ -52,7 +53,7 @@ export default function ListTasks({ progress }: IProps) {
       dataIndex: 'pointEstimate',
       key: 'pointEstimate',
       render: (pointEstimate: PointEstimate) =>
-        <p>{pointEstimate === "ONE" ? 1 : pointEstimate === "TWO" ? 2 : pointEstimate === "FOUR" ? 4 : pointEstimate === "EIGHT" ? 8 : 0} Points</p>
+        <Text>{pointEstimate === "ONE" ? 1 : pointEstimate === "TWO" ? 2 : pointEstimate === "FOUR" ? 4 : pointEstimate === "EIGHT" ? 8 : 0} Points</Text>
     },
     {
       title: 'Task Assign Name',
@@ -60,7 +61,7 @@ export default function ListTasks({ progress }: IProps) {
       key: 'assignee',
       render: (assignee: User) =>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <Avatar size={35} style={{marginRight: 10}} src={assignee.avatar} />
+          <Avatar size={35} style={{ marginRight: 10 }} src={assignee.avatar} />
           <Text>{assignee.fullName}</Text>
         </div>
     },
@@ -68,16 +69,15 @@ export default function ListTasks({ progress }: IProps) {
       title: 'Due Date',
       dataIndex: 'dueDate',
       key: 'dueDate',
-      render: (dueDate: string) => 
-        {
-          const today = new Date()
-          const yesterday = new Date(today.getTime() - 24*60*60*1000)
-          const date = new Date(dueDate)
-          
-          const formatDate = date.toLocaleString("en-US", {day: 'numeric', month: 'long' ,year: 'numeric' })
+      render: (dueDate: string) => {
+        const today = new Date()
+        const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+        const date = new Date(dueDate)
+        const formatDate = date.toLocaleString("en-US", { day: 'numeric', month: 'long', year: 'numeric' })
         return (
-          <p>{date.getDate() === today.getDate() ?"Today" :date.getDate() === yesterday.getDate()?  "Yesterday" : formatDate}</p>
-        )}
+          date.getDate() === today.getDate() ? <Text>Today</Text> : date.getDate() === yesterday.getDate() ? <Text style={{ color: "#E27D73" }}>Yesterday</Text> : <Text>{formatDate}</Text>
+        )
+      }
       ,
     },
     {
@@ -86,7 +86,7 @@ export default function ListTasks({ progress }: IProps) {
       key: 'action',
       render: (id: string) => (
         <Space>
-          <Button title="Delete" onClick={()=> deleteTask({variables: { input: {id: id} }})}>DELETE</Button>
+          <Button title="Delete" onClick={() => { deleteTask({ variables: { input: { id: id } } }); window.location.reload(); }}>DELETE</Button>
         </Space>
       ),
     },
@@ -94,8 +94,8 @@ export default function ListTasks({ progress }: IProps) {
 
   return (
     <div>
-      <Typography.Title level={4} style={{ margin: 0 }}>{progress === "BACKLOG" ? "Backlog": progress === "CANCELLED" ? "Cancelled": progress === "DONE" ? "Completed" : progress === "IN_PROGRESS" ? "In Progress": "To Do"} ({data.tasks.length})</Typography.Title>
-    <Table columns={columns} dataSource={data.tasks} />
+      <Typography.Title level={4} style={{ margin: 0 }}>{progress === "BACKLOG" ? "Backlog" : progress === "CANCELLED" ? "Cancelled" : progress === "DONE" ? "Completed" : progress === "IN_PROGRESS" ? "In Progress" : "To Do"} ({data.tasks.length})</Typography.Title>
+      <Table columns={columns} dataSource={data.tasks} pagination={false} />
     </div>
   )
 }

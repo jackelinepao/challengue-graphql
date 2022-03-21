@@ -1,51 +1,77 @@
-import { useQuery, useMutation } from '@apollo/client';
-import { Button, Checkbox, DatePicker, Form, Input, Modal, Select } from 'antd'
 import React, { useState } from 'react'
+
+import { useQuery, useMutation } from '@apollo/client';
+import { Button, DatePicker, Form, Input, Modal, Select } from 'antd'
 import { CREATE_TASK_QUERY } from '../../graphQl/mutations/createTask';
 import { ALL_TASKS_QUERY } from '../../graphQl/queries/getTastks';
 import { ALL_USERS_QUERY } from '../../graphQl/queries/getUsers';
+import Swal from 'sweetalert2'
+
 interface IPropsModal {
   openModal: boolean
   setIsModalVisible: any
 }
+
 const { Option } = Select;
 
 export default function ModalAddTask(props: IPropsModal) {
-  const [loadingbBtn, setLoadingBtn] = useState(false)
+  const [state, setState] = useState("TODO")
   const { openModal, setIsModalVisible } = props
-  const [addTask, { data, loading, error }] = useMutation(CREATE_TASK_QUERY, {refetchQueries: [ {query: ALL_TASKS_QUERY, variables: { input: {} }}]});
+  const [addTask, { data, loading, error }] = useMutation(CREATE_TASK_QUERY, { refetchQueries: [{ query: ALL_TASKS_QUERY, variables: { input: { status: state } } }] });
   const [form] = Form.useForm();
   const allUsers = useQuery(ALL_USERS_QUERY)
 
-  const handleOk = () => {
-    setLoadingBtn(true)
-    setTimeout(() => {
-      setIsModalVisible(false)
-      setLoadingBtn(false)
-    }, 3000);
-  };
+  if (loading) {
+    Swal.fire({
+      position: 'center',
+      icon: 'success',
+      title: 'Your work has been saved',
+      showConfirmButton: false,
+      timer: 1500
+    })
+  }
+
+  if (error) {
+    Swal.fire({
+      position: 'center',
+      icon: 'error',
+      title: 'Oops',
+      showConfirmButton: false,
+      timer: 1500
+    })
+  }
+
+  function handleChange(value: any) {
+    setState(value)
+  }
 
   const handleCancel = () => {
-    setIsModalVisible(false)
-  };
-  const onFinish = (values: any) => {
-    const date = new Date(values.dueDate)
-    console.log('Success:', values);
-    addTask({ variables: { input: { assigneeId: values.assignee, name: values.name, tags: values.tags, status: values.status, pointEstimate: values.pointEstimate, dueDate: date } } });
     form.resetFields();
     setIsModalVisible(false)
+  };
+
+  const onFinish = (values: any) => {
+    const date = new Date(values.dueDate)
+    const valuesInput = {
+      assigneeId: values.assignee,
+      name: values.name,
+      tags: values.tags,
+      status: values.status,
+      pointEstimate: values.pointEstimate, dueDate: date
+    }
+    addTask({ variables: { input: valuesInput } });
+    form.resetFields();
+    setIsModalVisible(false);
   };
 
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
 
-
   return (
     <Modal
       visible={openModal}
       title="Title"
-      onOk={handleOk}
       onCancel={handleCancel}
       footer={[
         <Button key="back" onClick={handleCancel}>
@@ -55,6 +81,7 @@ export default function ModalAddTask(props: IPropsModal) {
     >
       <Form
         name="basic"
+        form={form}
         initialValues={{ remember: true }}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
@@ -86,7 +113,7 @@ export default function ModalAddTask(props: IPropsModal) {
                 placeholder="Assignee"
                 allowClear
               >
-                {allUsers.data.users.map((item: any) => <Option value={item.id}>{item.fullName}</Option>)}
+                {allUsers.data.users.map((item: any) => <Option value={item.id} key={item.id}>{item.fullName}</Option>)}
               </Select>
             </Form.Item>
 
@@ -97,8 +124,7 @@ export default function ModalAddTask(props: IPropsModal) {
             mode="multiple"
             allowClear
             style={{ width: '100%' }}
-            placeholder="Please select"
-            defaultValue={["REACT"]}
+            placeholder="Please select Tags"
           >
             <Option value="ANDROID">ANDROID</Option>
             <Option value="IOS">IOS</Option>
@@ -109,20 +135,19 @@ export default function ModalAddTask(props: IPropsModal) {
         </Form.Item>
         <Form.Item name="status" rules={[{ required: true }]}>
           <Select
-            placeholder="Status"
-            allowClear
+            placeholder="Please select Status"
+            allowClear onChange={handleChange}
           >
             <Option value="BACKLOG">BACKLOG</Option>
-            <Option value="CANCELLED">CANCELLED</Option>
-            <Option value="DONE">DONE</Option>
-            <Option value="IN_PROGRESS">IN PROGRESS</Option>
             <Option value="TODO">TO DO</Option>
+            <Option value="IN_PROGRESS">IN PROGRESS</Option>
+            <Option value="DONE">DONE</Option>
+            <Option value="CANCELLED">CANCELLED</Option>
           </Select>
         </Form.Item>
-        <Form.Item name="dueDate" label="DatePicker">
+        <Form.Item name="dueDate" label="Due Date" rules={[{ required: true }]}>
           <DatePicker />
         </Form.Item>
-
         <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
           <Button type="primary" htmlType="submit">
             Submit

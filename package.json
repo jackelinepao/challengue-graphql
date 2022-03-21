@@ -19,6 +19,7 @@
     "react-dom": "^17.0.2",
     "react-router-dom": "^6.2.2",
     "react-scripts": "5.0.0",
+    "sweetalert2": "^11.4.6",
     "typescript": "^4.6.2",
     "web-vitals": "^2.1.0"
   },
@@ -27,7 +28,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "schema:generate": "graphql-codegen --config codegen.yml -r dotenv/config"
+    "schema:generate": "graphql-codegen --config codegen.yml -r dotenv/config",
+    "tslint": "tslint 'src/**/*.ts?(x)'"
   },
   "eslintConfig": {
     "extends": [
