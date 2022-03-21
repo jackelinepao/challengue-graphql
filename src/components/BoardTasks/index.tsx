@@ -27,6 +27,5 @@ export default function BoardTasks() {
       </div>
       <ModalAddTask openModal={isModalVisible} setIsModalVisible={setIsModalVisible} />
     </>
-
   )
 }

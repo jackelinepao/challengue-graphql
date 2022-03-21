@@ -116,7 +116,6 @@ export default function ModalAddTask(props: IPropsModal) {
                 {allUsers.data.users.map((item: any) => <Option value={item.id} key={item.id}>{item.fullName}</Option>)}
               </Select>
             </Form.Item>
-
           )
         }
         <Form.Item name="tags" rules={[{ required: true }]}>
